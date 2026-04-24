@@ -1,43 +1,26 @@
 #!/bin/bash
-
-main() {
 set -euo pipefail
 
 # Set to false to actually delete
 DRY_RUN=true
 MEDIA_DIR="/mnt/user/data/media/movies"
-count=0
 
-while IFS= read -r -d '' dir; do
-
+find "$MEDIA_DIR" -type d | while read dir; do
     # Get the main video file (assumes one per folder)
-    video=$(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) -print0 | { IFS= read -r -d '' f && printf '%s' "$f"; } || true)
+    video=$(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) | head -n 1)
     [ -z "$video" ] && continue
     vidbase=$(basename "$video")
     vidname="${vidbase%.*}"
-
     # Loop through subtitle files in that folder
-    while IFS= read -r -d '' sub; do
+    find "$dir" -maxdepth 1 -type f \( -iname "*.srt" -o -iname "*.ass" -o -iname "*.sub" \) | while read sub; do
         subbase=$(basename "$sub")
-        # Strip subtitle extension (.srt, .ass, .sub)
-        subname="${subbase%.*}"
-        # Strip language tags (.en, .hi, .en.hi, .fr etc) from the end
-        subname=$(printf '%s' "$subname" | sed 's/\(\.[a-z]\{2,3\}\)\+$//')
-
-        if [[ "$subname" != "$vidname" ]]; then
+        if [[ "$subbase" != "$vidname"* ]]; then
             if [ "$DRY_RUN" = true ]; then
-                printf '[DRY RUN] Would delete: %s\n' "$sub"
+                echo "[DRY RUN] Would delete: "$sub""
             else
-                printf 'Deleting: %s\n' "$sub"
+                echo "Deleting: "$sub""
                 rm "$sub"
             fi
-            ((count++))
         fi
-    done < <(find "$dir" -maxdepth 1 -type f \( -iname "*.srt" -o -iname "*.ass" -o -iname "*.sub" \) -print0)
-
-done < <(find "$MEDIA_DIR" -mindepth 1 -maxdepth 1 -type d -print0)
-
-printf '\nDone. %d file(s) %s.\n' "$count" "$([ "$DRY_RUN" = true ] && echo 'would be deleted' || echo 'deleted')"
-}
-
-main 2>&1 | less
+    done
+done
