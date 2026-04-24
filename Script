@@ -1,0 +1,22 @@
+#!/bin/bash
+
+find /mnt/user/data/media/movies -type d | while read dir; do
+    # Get the main video file (assumes one per folder)
+    video=$(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) | head -n 1)
+
+    [ -z "$video" ] && continue
+
+    vidbase=$(basename "$video")
+    vidname="${vidbase%.*}"
+
+    # Loop through subtitle files in that folder
+    find "$dir" -maxdepth 1 -type f \( -iname "*.srt" -o -iname "*.ass" -o -iname "*.sub" \) | while read sub; do
+        subbase=$(basename "$sub")
+
+        # If subtitle does NOT start with video name → delete
+        if [[ "$subbase" != "$vidname"* ]]; then
+            echo "Would delete: $sub"
+            # rm "$sub"
+        fi
+    done
+done
