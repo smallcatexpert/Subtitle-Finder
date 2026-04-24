@@ -1,26 +1,27 @@
-#!/bin/bash
+main() {
 set -euo pipefail
 
-# Set to false to actually delete
 DRY_RUN=true
 MEDIA_DIR="/mnt/user/data/media/tv"
-
 count=0
 
 while IFS= read -r -d '' dir; do
-    # Collect all video base names in this folder
+
+    # Collect all videos in this folder
     mapfile -t videos < <(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) -print0 | tr '\0' '\n')
     [ ${#videos[@]} -eq 0 ] && continue
 
-    # Loop through subtitle files
     while IFS= read -r -d '' sub; do
         subbase=$(basename "$sub")
-        match_found=false
+        # Strip subtitle extension then language tags (.en, .hi, .en.hi etc)
+        subname="${subbase%.*}"
+        subname=$(printf '%s' "$subname" | sed 's/\(\.[a-z]\{2,3\}\)\+$//')
 
+        match_found=false
         for video in "${videos[@]}"; do
             vidbase=$(basename "$video")
             vidname="${vidbase%.*}"
-            if [[ "$subbase" == "$vidname"* ]]; then
+            if [[ "$subname" == "$vidname" ]]; then
                 match_found=true
                 break
             fi
@@ -40,3 +41,6 @@ while IFS= read -r -d '' dir; do
 done < <(find "$MEDIA_DIR" -mindepth 1 -type d -print0)
 
 printf '\nDone. %d file(s) %s.\n' "$count" "$([ "$DRY_RUN" = true ] && echo 'would be deleted' || echo 'deleted')"
+}
+
+main 2>&1 | less
