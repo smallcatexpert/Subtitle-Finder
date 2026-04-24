@@ -15,7 +15,7 @@ find /mnt/user/data/media/movies -type d | while read dir; do
 
         # If subtitle does NOT start with video name → delete
         if [[ "$subbase" != "$vidname"* ]]; then
-            echo "Would delete: $sub"
+            echo "delete: $sub"
             # rm "$sub"
         fi
     done
