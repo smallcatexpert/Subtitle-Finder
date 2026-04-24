@@ -9,7 +9,7 @@ count=0
 
 while IFS= read -r -d '' dir; do
     # Get the main video file (assumes one per folder)
-    video=$(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) -print0 | { IFS= read -r -d '' f && printf '%s' "$f"; })
+    video=$(find "$dir" -maxdepth 1 -type f \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) -print0 | { IFS= read -r -d '' f && printf '%s' "$f"; } || true)
     [ -z "$video" ] && continue
 
     vidbase=$(basename "$video")
@@ -29,6 +29,6 @@ while IFS= read -r -d '' dir; do
         fi
     done < <(find "$dir" -maxdepth 1 -type f \( -iname "*.srt" -o -iname "*.ass" -o -iname "*.sub" \) -print0)
 
-done < <(find "$MEDIA_DIR" -type d -print0)
+done < <(find "$MEDIA_DIR" -mindepth 1 -maxdepth 1 -type d -print0)
 
 printf '\nDone. %d file(s) %s.\n' "$count" "$([ "$DRY_RUN" = true ] && echo 'would be deleted' || echo 'deleted')"
