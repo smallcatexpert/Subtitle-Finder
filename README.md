@@ -1,0 +1,1 @@
+This script will find subtitles that don't match the movie name in the folder. Useful for running after an upgrade in radarr. Script is in dry run mode. Remove the '#' in front of rm "$sub" to delete subtitle files.
